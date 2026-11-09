@@ -1,0 +1,250 @@
+\documentclass[11pt]{article}
+
+\title{A Per-Gaussian Physics-Prior MLP\\Trained on Fitted Splats}
+\author{sandy-t-shelvan}
+\date{9 November 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+A per-Gaussian multilayer perceptron predicts physical attributes of an object from a fitted 3D Gaussian splat.
+The network has two tanh hidden layers of width 32 and a linear head of width 33.
+Inference runs the MLP on each in-mask Gaussian and averages the 33 outputs.
+It does not average the 912 inputs.
+The six weight arrays in \texttt{data/mlp/physics\_prior\_splat.npz} were trained for this project.
+They are not a released third-party checkpoint.
+The saved weights are epoch 10 of a 14-epoch run on 3274 objects.
+On the 323-object test split, which was scored once after the checkpoint was chosen, material accuracy is 0.8885448916408669, body accuracy is 0.9907120743034056, and collision accuracy is 0.7678018575851393.
+Meshes and per-Gaussian \texttt{prior\_input.npy} files are not included.
+\end{abstract}
+
+\section{Task}
+The model reads one fitted splat and predicts a material class, a body type, a collision primitive, a log mass, a log density, a rigidity, and a deformability.
+Each Gaussian is one row.
+The MLP is applied to every in-mask Gaussian, and the 33 raw outputs are averaged.
+Averaging the 912-dimensional inputs and running the MLP once is a different function and is not the inference used here.
+
+A material vote that ends in a tie returns no class.
+Keyword proposals are passed in by the caller.
+The vote does not look up the keyword dictionary on its own.
+The unknown class weight is multiplied by 0.4 before it is added to the class score.
+An object whose deformability is at least 0.65 is resolved as a soft body.
+The published body accuracy in Section~\ref{sec:results} is the body head compared with the stored label.
+The soft-body rule is applied when a physics record is built, not inside the masked training loss.
+
+The weights were trained in this project.
+They are not a released third-party checkpoint.
+The keyword dictionary is the table in \texttt{sceneagent/taxonomy.py} (\texttt{\_KEYWORD\_RULES}).
+It is this project's dictionary.
+
+\section{Input}
+One row has width 912.
+Columns 0--383 are DINOv2 ViT-S/14, width 384 (\texttt{vit\_small\_patch14\_dinov2.lvd142m}).
+Columns 384--895 are OpenCLIP ViT-B-16 with the OpenAI weights, width 512.
+Columns 896--911 are sixteen geometry quantities, in this order: \(x\), \(y\), \(z\), three exp scales, sigmoid opacity, quaternion components \texttt{rot\_0} through \texttt{rot\_3}, spherical-harmonic DC coefficients \texttt{f\_dc\_0} through \texttt{f\_dc\_2}, log volume, and anisotropy.
+Log volume is the sum of the three log-scales stored in the ply.
+Anisotropy is the ratio of the largest exp scale to the smallest exp scale.
+
+A ply that lacks a required source column is refused.
+A Gaussian whose source values are not finite is dropped.
+Missing numbers are not filled.
+Opacity must vary.
+A fitted row is kept only when the opacity standard deviation is at least \(10^{-3}\) and the opacity is not the constant 0.99.
+A triangle prior with opacity fixed at 0.99 is the wrong input.
+That stand-in is not this model, and the file \texttt{physics\_prior.npz} is not part of this repository.
+
+DINOv2 and OpenCLIP stay frozen.
+They are not parameters of Adam.
+splatfacto fits the Gaussians and is not updated by Adam.
+
+\section{Output}
+The head has width 33.
+\begin{itemize}
+\item Slots 0--9 are material logits: plastic, metal, wood, fabric, paper and cardboard, rubber and foam, glass and ceramic, food and organic matter, liquid and granular matter, unknown.
+\item Slots 10--15 are body logits: dynamic rigid, static rigid, kinematic, soft deformable, cloth shell, fluid or granular.
+\item Slots 16--23 are collision logits: box, sphere, cylinder, capsule, convex hull, triangle mesh, tetrahedral mesh, cloth mesh.
+\item Slot 24 is log mass and slot 25 is log density, both natural logs.
+\item Slot 26 is rigidity and slot 27 is deformability.
+The sigmoid is not inside the forward pass.
+It is applied to these two slots in the loss and when the mean is decoded.
+\item Slots 28--32 are numeric fields that stay masked.
+They receive no target and no gradient.
+\end{itemize}
+Friction and restitution are null.
+Young's modulus, Poisson's ratio, and the rendering material are unpublished and were not invented.
+
+\section{Network}
+The network is a multilayer perceptron.
+It is not a recurrent network and not a convolutional network.
+Two hidden layers, each of width 32, use \(\tanh\).
+The head is linear.
+The six trained arrays, with Glorot uniform initialization and zero biases, are
+\begin{center}
+\begin{tabular}{ll}
+\(w_1\) & \((912, 32)\) \\
+\(b_1\) & \((32,)\) \\
+\(w_2\) & \((32, 32)\) \\
+\(b_2\) & \((32,)\) \\
+\(w_{\mathrm{out}}\) & \((32, 33)\) \\
+\(b_{\mathrm{out}}\) & \((33,)\) \\
+\end{tabular}
+\end{center}
+Glorot uniform draws each entry from \([-\ell, \ell]\) with \(\ell = \sqrt{6/(n_{\mathrm{in}}+n_{\mathrm{out}})}\).
+Only these six arrays are trained.
+The forward map is
+\[
+h_1 = \tanh(x W_1 + b_1), \qquad
+h_2 = \tanh(h_1 W_2 + b_2), \qquad
+y = h_2 W_{\mathrm{out}} + b_{\mathrm{out}}.
+\]
+Rows are accumulated in chunks of 4096 Gaussians.
+The chunked mean matches the mean of the full forward.
+
+\section{Loss}
+The loss is applied to the in-mask mean, one object at a time.
+Material, body, and collision use cross-entropy on the logits.
+Log mass and log density use squared error on the raw outputs.
+Rigidity and deformability use squared error after the sigmoid.
+Slots 28--32 are masked, so their contribution is zero.
+For one object the loss is
+\begin{align*}
+\mathcal{L}
+&= \mathrm{CE}(y_{0:9}, \mathrm{material})
++ \mathrm{CE}(y_{10:15}, \mathrm{body})
++ \mathrm{CE}(y_{16:23}, \mathrm{collision}) \\
+&\quad + (y_{24} - \log m)^2
++ (y_{25} - \log \rho)^2
++ (\sigma(y_{26}) - r)^2
++ (\sigma(y_{27}) - d)^2.
+\end{align*}
+Class accuracy is the fraction of objects whose argmax matches the label.
+Numeric error is the mean absolute error of the decoded log mass, log density, sigmoid rigidity, and sigmoid deformability.
+
+\section{Optimizer}
+The optimizer is a hand-written Adam.
+The learning rate is \(10^{-3}\), \(\beta_1 = 0.9\), \(\beta_2 = 0.999\), and \(\epsilon = 10^{-8}\).
+Weight decay of \(10^{-6}\) is added to the gradient before the moments are updated.
+A global \(\ell_2\) clip of 5.0 is applied to the six gradients before that decay term.
+One object is one step.
+The seed is 0.
+The maximum is 30 epochs.
+From epoch 12, training stops when the best of the last 4 validation losses is not within 0.5 percent of the best loss before that window.
+The threshold is 0.995, and the comparison is strict, so a drop of exactly 0.5 percent does not stop.
+The saved weights are the earliest epoch with the lowest validation loss.
+The test split is not read by the stopping rule.
+
+\section{Data}
+Each fitted object is built on the CPU and then packed.
+The orbit is 16 views: 8 azimuths at elevations \(18^\circ\) and \(50^\circ\).
+COLMAP registers those views, splatfacto runs for 600 steps, and the pack writes \((N, 912)\).
+Labels come from \texttt{gemini-3.8-flash}, with thinking level \texttt{low} and temperature 0.
+The labeler caps itself at 500 requests per minute, 1{,}500{,}000 tokens per minute, and 8{,}000 requests per day.
+Ids that already had an ok label were not relabeled.
+
+The queue is about 7538 objects: YCB 71, GSO 1024, and ABO 6443.
+Ok labels used as the original targets number 4427: YCB 70, GSO 244, and ABO 4113.
+Those rows are \texttt{data/mlp/stratified\_labels.4090.jsonl}.
+The fitted rows in this training run number 3736: YCB 0, GSO 162, and ABO 3574.
+About 191 fits failed, mostly because COLMAP wrote no model.
+A later file, \texttt{data/mlp/stratified\_labels.remaining.jsonl}, has 1796 additional ok labels (GSO 737, ABO 1059).
+That file was not used to train this checkpoint.
+
+\section{Split}
+Train ids are the complement of a 12 percent identity holdout.
+Three known ids are held out when they are present: \texttt{002\_master\_chef\_can}, \texttt{Weisshai\_Great\_White\_Shark}, and \texttt{B079TXJCR5}.
+Those three were absent from the fitted table, so the holdout is the hash sample alone.
+An id is selected when the first byte of \(\mathrm{sha256}(\mathrm{id})\), divided by 256, is below 0.12.
+The 462 holdout ids are sorted by the sha256 digest and then by the id string.
+Validation is the first 30 percent, half up, using integer arithmetic: \(\mathrm{divmod}(3n, 10)\), with a remainder of 5 or more rounding up.
+For \(n = 462\) the quotient is 138 and the remainder is 6, so validation has 139 ids and test has 323.
+Train has 3274.
+Seed 0 does not shuffle this validation slice.
+It does permute the order of training objects inside each epoch.
+The test ids are scored once, after the checkpoint is chosen.
+
+\section{Results}
+\label{sec:results}
+The report is \texttt{data/mlp/train\_report\_splat.json} (375162 bytes).
+The checkpoint is \texttt{data/mlp/physics\_prior\_splat.npz} (260290 bytes).
+The run recorded \texttt{epochs\_ran} 14, \texttt{checkpoint\_epoch} 10, and \texttt{n\_fitted} 3736.
+Table~\ref{tab:scores} is \texttt{score\_split} on the restored epoch-10 weights.
+The in-loop losses in Table~\ref{tab:curve} are the mean training loss while the weights were still moving, and the validation loss of the weights at the end of that epoch.
+They are not the restored-checkpoint scores.
+
+\begin{table}[t]
+\centering
+\caption{Restored epoch-10 checkpoint. Classification entries are accuracy. Numeric entries are mean absolute error.}
+\label{tab:scores}
+\footnotesize
+\begin{tabular}{lrrr}
+\hline
+ & Train & Validation & Test \\
+\hline
+\(n\) & 3274 & 139 & 323 \\
+Loss & 1.3504881230964794 & 2.293009738617003 & 2.0879311734829393 \\
+Material & 0.9526572999389127 & 0.9280575539568345 & 0.8885448916408669 \\
+Body & 0.9932803909590715 & 0.9568345323741008 & 0.9907120743034056 \\
+Collision & 0.8313989004276114 & 0.8201438848920863 & 0.7678018575851393 \\
+Log mass & 0.29221152206794304 & 0.38314453113056723 & 0.35213020169288767 \\
+Log density & 0.493749474065539 & 0.5773056012440149 & 0.5719236185569908 \\
+Rigidity & 0.03465716247218895 & 0.05072960603976827 & 0.037416784396735514 \\
+Deformability & 0.03273072179495256 & 0.046840128143126915 & 0.03501937974941083 \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\centering
+\caption{In-loop mean loss by epoch on the 3274 training objects, and validation loss on the 139 validation objects. Epoch 10 has the lowest validation loss.}
+\label{tab:curve}
+\footnotesize
+\begin{tabular}{rrr}
+\hline
+Epoch & Train loss & Validation loss \\
+\hline
+1 & 3.459843983024622 & 2.908307250704289 \\
+2 & 2.2695306359359195 & 2.8169932549644834 \\
+3 & 2.033521992464412 & 2.652548772876703 \\
+4 & 1.8945112152633685 & 2.883813949546511 \\
+5 & 1.8108405343027458 & 2.5052527957759665 \\
+6 & 1.6972543350052578 & 2.353592547470898 \\
+7 & 1.6250525286905761 & 2.58225741753844 \\
+8 & 1.5474230001040072 & 2.521480992803893 \\
+9 & 1.4982185734968427 & 2.3677041720399106 \\
+10 & 1.4523404458332272 & 2.293009738617003 \\
+11 & 1.3954204487159254 & 2.4070450118198785 \\
+12 & 1.3562194154564946 & 2.4512925276327464 \\
+13 & 1.3246501546116667 & 2.4344396546699816 \\
+14 & 1.2731846908738063 & 2.386788401613216 \\
+\hline
+\end{tabular}
+\end{table}
+
+In-loop train loss fell from 3.459843983024622 at epoch 1 to 1.2731846908738063 at epoch 14.
+Epoch 10 of that curve is 1.4523404458332272.
+Validation loss at epoch 14 was 2.386788401613216, higher than 2.293009738617003 at epoch 10, so the earlier epoch was kept.
+More epochs on this same 3274-object set did not improve validation.
+Early stopping ended the run at epoch 14.
+The best validation loss in the report is 2.293009738617003.
+
+\section{Previous run}
+An earlier 30-epoch run trained on the same 3274 fitted objects and scored the whole 462-id holdout, with no validation split.
+It is a previous run, not the result of this paper.
+The backup files are \texttt{data/mlp/physics\_prior\_splat\_holdout462.npz} and \texttt{data/mlp/train\_report\_splat\_holdout462.json}.
+That report records holdout loss 2.3994417890371444, material accuracy 0.8939393939393939 (0.894 to three digits), body accuracy 0.9783549783549783 (0.978), and collision accuracy 0.7770562770562771 (0.777).
+The holdout mean absolute errors are log mass 0.36483208720055876 (0.365), log density 0.5572938724288687 (0.557), rigidity 0.039427355866847605 (0.039), and deformability 0.03778218721477836 (0.038).
+Train material accuracy on that run is 0.9813683567501528 (0.981).
+
+\section{Limitations}
+Some ABO masses in the 4427-row label file are extreme.
+Sixty-six ABO rows have \texttt{mass\_kg} above 100, and the largest value in that file is 580.
+Fifty-six rows are named the placeholder \texttt{consolidatedScene}.
+Forty-three of the 3736 fitted ids have that name.
+Cloth-shell rows with deformability at least 0.65 would be rewritten to soft deformable by the body resolver.
+The 4427-row file contains 535 such rows; the stored labels were left as written.
+About 1315 queue ids still had no ok label when the 1796-row file was written, mostly because the mesh was the wrong size or the render failed.
+The 1796 later labels were not used to train the epoch-10 checkpoint.
+Rescoring the checkpoint requires the per-Gaussian \texttt{prior\_input.npy} arrays, which are not in this repository.
+
+\end{document}

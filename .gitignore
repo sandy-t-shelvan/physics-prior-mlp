@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+.env
+*.env
+paper/*.aux
+paper/*.log
+paper/*.out
+paper/*.toc
+paper/*.fls
+paper/*.fdb_latexmk
+paper/*.synctex.gz
