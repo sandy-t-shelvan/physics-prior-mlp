@@ -8,7 +8,7 @@
 \maketitle
 
 \begin{abstract}
-A per-Gaussian multilayer perceptron predicts physical attributes of an object from a fitted 3D Gaussian splat.
+A per-Gaussian multilayer perceptron predicts physical attributes of an object from a fitted 3D Gaussian splat~\cite{kerbl2023gaussian}.
 The network has two tanh hidden layers of width 32 and a linear head of width 33.
 Inference runs the MLP on each in-mask Gaussian and averages the 33 outputs.
 It does not average the 912 inputs.
@@ -34,14 +34,15 @@ The published body accuracy in Section~\ref{sec:results} is the body head compar
 The soft-body rule is applied when a physics record is built, not inside the masked training loss.
 
 The weights were trained in this project.
+They correspond to the per-Gaussian physics prior in Section 3.4 of Hollis, Fan, and Yang~\cite{hollis2026sceneagent}.
 They are not a released third-party checkpoint.
 The keyword dictionary is the table in \texttt{sceneagent/taxonomy.py} (\texttt{\_KEYWORD\_RULES}).
 It is this project's dictionary.
 
 \section{Input}
 One row has width 912.
-Columns 0--383 are DINOv2 ViT-S/14, width 384 (\texttt{vit\_small\_patch14\_dinov2.lvd142m}).
-Columns 384--895 are OpenCLIP ViT-B-16 with the OpenAI weights, width 512.
+Columns 0--383 are DINOv2 ViT-S/14~\cite{oquab2024dinov2}, width 384 (\texttt{vit\_small\_patch14\_dinov2.lvd142m}).
+Columns 384--895 are OpenCLIP ViT-B-16~\cite{cherti2023reproducible} with the OpenAI CLIP weights~\cite{radford2021clip}, width 512.
 Columns 896--911 are sixteen geometry quantities, in this order: \(x\), \(y\), \(z\), three exp scales, sigmoid opacity, quaternion components \texttt{rot\_0} through \texttt{rot\_3}, spherical-harmonic DC coefficients \texttt{f\_dc\_0} through \texttt{f\_dc\_2}, log volume, and anisotropy.
 Log volume is the sum of the three log-scales stored in the ply.
 Anisotropy is the ratio of the largest exp scale to the smallest exp scale.
@@ -55,8 +56,8 @@ A triangle prior with opacity fixed at 0.99 is the wrong input.
 That stand-in is not this model, and the file \texttt{physics\_prior.npz} is not part of this repository.
 
 DINOv2 and OpenCLIP stay frozen.
-They are not parameters of Adam.
-splatfacto fits the Gaussians and is not updated by Adam.
+They are not parameters of Adam~\cite{kingma2015adam}.
+splatfacto, the Nerfstudio method used here~\cite{tancik2023nerfstudio}, fits the Gaussians and is not updated by Adam.
 
 \section{Output}
 The head has width 33.
@@ -79,7 +80,7 @@ The network is a multilayer perceptron.
 It is not a recurrent network and not a convolutional network.
 Two hidden layers, each of width 32, use \(\tanh\).
 The head is linear.
-The six trained arrays, with Glorot uniform initialization and zero biases, are
+The six trained arrays, with Glorot uniform initialization~\cite{glorot2010understanding} and zero biases, are
 \begin{center}
 \begin{tabular}{ll}
 \(w_1\) & \((912, 32)\) \\
@@ -137,12 +138,12 @@ The test split is not read by the stopping rule.
 \section{Data}
 Each fitted object is built on the CPU and then packed.
 The orbit is 16 views: 8 azimuths at elevations \(18^\circ\) and \(50^\circ\).
-COLMAP registers those views, splatfacto runs for 600 steps, and the pack writes \((N, 912)\).
+COLMAP~\cite{schoenberger2016sfm} registers those views, splatfacto runs for 600 steps, and the pack writes \((N, 912)\).
 Labels come from \texttt{gemini-3.8-flash}, with thinking level \texttt{low} and temperature 0.
 The labeler caps itself at 500 requests per minute, 1{,}500{,}000 tokens per minute, and 8{,}000 requests per day.
 Ids that already had an ok label were not relabeled.
 
-The queue is about 7538 objects: YCB 71, GSO 1024, and ABO 6443.
+The queue is about 7538 objects: YCB~\cite{calli2015ycb} 71, GSO~\cite{downs2022gso} 1024, and ABO~\cite{collins2022abo} 6443.
 Ok labels used as the original targets number 4427: YCB 70, GSO 244, and ABO 4113.
 Those rows are \texttt{data/mlp/stratified\_labels.4090.jsonl}.
 The fitted rows in this training run number 3736: YCB 0, GSO 162, and ABO 3574.
@@ -246,5 +247,72 @@ The 4427-row file contains 535 such rows; the stored labels were left as written
 About 1315 queue ids still had no ok label when the 1796-row file was written, mostly because the mesh was the wrong size or the render failed.
 The 1796 later labels were not used to train the epoch-10 checkpoint.
 Rescoring the checkpoint requires the per-Gaussian \texttt{prior\_input.npy} arrays, which are not in this repository.
+
+\begin{thebibliography}{99}
+
+\bibitem{kerbl2023gaussian}
+Bernhard Kerbl, Georgios Kopanas, Thomas Leimk{\"u}hler, and George Drettakis.
+3D Gaussian Splatting for Real-Time Radiance Field Rendering.
+\textit{ACM Transactions on Graphics}, 42(4), 2023.
+Proceedings of SIGGRAPH.
+
+\bibitem{schoenberger2016sfm}
+Johannes~L. Sch{\"o}nberger and Jan-Michael Frahm.
+Structure-from-Motion Revisited.
+In \textit{Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)}, pages 4104--4113, 2016.
+
+\bibitem{tancik2023nerfstudio}
+Matthew Tancik, Ethan Weber, Evonne Ng, Ruilong Li, Brent Yi, Justin Kerr, Terrance Wang, Alexander Kristoffersen, Jake Austin, Kamyar Salahi, Abhik Ahuja, David McAllister, and Angjoo Kanazawa.
+Nerfstudio: A Modular Framework for Neural Radiance Field Development.
+In \textit{ACM SIGGRAPH 2023 Conference Proceedings}, 2023.
+
+\bibitem{oquab2024dinov2}
+Maxime Oquab, Timoth{\'e}e Darcet, Th{\'e}o Moutakanni, Huy~V. Vo, Marc Szafraniec, Vasil Khalidov, Pierre Fernandez, Daniel Haziza, Francisco Massa, Alaaeldin El-Nouby, Mahmoud Assran, Nicolas Ballas, Wojciech Galuba, Russell Howes, Po-Yao Huang, Shang-Wen Li, Ishan Misra, Michael Rabbat, Vasu Sharma, Gabriel Synnaeve, Hu Xu, Herv{\'e} J{\'e}gou, Julien Mairal, Patrick Labatut, Armand Joulin, and Piotr Bojanowski.
+DINOv2: Learning Robust Visual Features without Supervision.
+\textit{Transactions on Machine Learning Research}, 2024.
+arXiv:2304.07193.
+
+\bibitem{radford2021clip}
+Alec Radford, Jong~Wook Kim, Chris Hallacy, Aditya Ramesh, Gabriel Goh, Sandhini Agarwal, Girish Sastry, Amanda Askell, Pamela Mishkin, Jack Clark, Gretchen Krueger, and Ilya Sutskever.
+Learning Transferable Visual Models From Natural Language Supervision.
+In \textit{Proceedings of the 38th International Conference on Machine Learning}, volume 139 of \textit{Proceedings of Machine Learning Research}, pages 8748--8763, 2021.
+
+\bibitem{cherti2023reproducible}
+Mehdi Cherti, Romain Beaumont, Ross Wightman, Mitchell Wortsman, Gabriel Ilharco, Cade Gordon, Christoph Schuhmann, Ludwig Schmidt, and Jenia Jitsev.
+Reproducible Scaling Laws for Contrastive Language-Image Learning.
+In \textit{Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)}, pages 2818--2829, 2023.
+
+\bibitem{kingma2015adam}
+Diederik~P. Kingma and Jimmy Ba.
+Adam: A Method for Stochastic Optimization.
+In \textit{International Conference on Learning Representations}, 2015.
+
+\bibitem{glorot2010understanding}
+Xavier Glorot and Yoshua Bengio.
+Understanding the difficulty of training deep feedforward neural networks.
+In \textit{Proceedings of the Thirteenth International Conference on Artificial Intelligence and Statistics}, volume 9 of \textit{Proceedings of Machine Learning Research}, pages 249--256, 2010.
+
+\bibitem{calli2015ycb}
+Berk Calli, Aaron Walsman, Arjun Singh, Siddhartha Srinivasa, Pieter Abbeel, and Aaron~M. Dollar.
+Benchmarking in Manipulation Research: Using the Yale--CMU--Berkeley Object and Model Set.
+\textit{IEEE Robotics \& Automation Magazine}, pages 36--52, September 2015.
+
+\bibitem{downs2022gso}
+Laura Downs, Anthony Francis, Nate Koenig, Brandon Kinman, Ryan Hickman, Krista Reymann, Thomas~B. McHugh, and Vincent Vanhoucke.
+Google Scanned Objects: A High-Quality Dataset of 3D Scanned Household Items.
+In \textit{2022 International Conference on Robotics and Automation (ICRA)}, pages 2553--2560, 2022.
+
+\bibitem{collins2022abo}
+Jasmine Collins, Shubham Goel, Kenan Deng, Achleshwar Luthra, Leon Xu, Erhan Gundogdu, Xi Zhang, Tomas~F. Yago Vicente, Thomas Dideriksen, Himanshu Arora, Matthieu Guillaumin, and Jitendra Malik.
+ABO: Dataset and Benchmarks for Real-World 3D Object Understanding.
+In \textit{Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)}, pages 21126--21136, 2022.
+
+\bibitem{hollis2026sceneagent}
+Hollis, Fan, and Yang.
+SceneAgent: An Agentic Pipeline from 3D and 4D Captures to Simulation Environments.
+Harvard Computational Robotics Group, preprint, 2026.
+arXiv:2610.34745.
+
+\end{thebibliography}
 
 \end{document}
