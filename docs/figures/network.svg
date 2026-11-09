@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="640" viewBox="0 0 880 640" role="img">
+  <title>Network: 912 inputs, two tanh layers of width 32, and 33 outputs</title>
+  <desc>Input groups are DINOv2 ViT-S/14, OpenCLIP ViT-B-16 with OpenAI weights, and 16 geometry values. Hidden layers are tanh of width 32. The linear head has 33 outputs.</desc>
+  <rect width="880" height="640" fill="#ffffff"/>
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7.2" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 Z" fill="#0f172a"/>
+    </marker>
+  </defs>
+
+  <g font-family="Segoe UI, Helvetica, Arial, sans-serif">
+    <!-- Input cards -->
+    <g transform="translate(16,16)">
+      <rect width="275" height="168" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+      <rect x="2" y="8" width="6" height="152" rx="3" fill="#1e3a8a"/>
+      <text x="20" y="32" fill="#0f172a" font-size="16" font-weight="700">DINOv2 ViT-S/14</text>
+      <text x="20" y="58" fill="#1e293b" font-size="14">slots 0&#8211;383</text>
+      <text x="20" y="148" fill="#0f172a" font-size="28" font-weight="700">384</text>
+    </g>
+    <g transform="translate(303,16)">
+      <rect width="275" height="168" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+      <rect x="2" y="8" width="6" height="152" rx="3" fill="#0369a1"/>
+      <text x="20" y="32" fill="#0f172a" font-size="16" font-weight="700">OpenCLIP ViT-B-16</text>
+      <text x="20" y="56" fill="#1e293b" font-size="14">OpenAI weights</text>
+      <text x="20" y="80" fill="#1e293b" font-size="14">slots 384&#8211;895</text>
+      <text x="20" y="148" fill="#0f172a" font-size="28" font-weight="700">512</text>
+    </g>
+    <g transform="translate(590,16)">
+      <rect width="274" height="168" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+      <rect x="2" y="8" width="6" height="152" rx="3" fill="#047857"/>
+      <text x="20" y="28" fill="#0f172a" font-size="16" font-weight="700">Geometry</text>
+      <text x="20" y="48" fill="#1e293b" font-size="13">slots 896&#8211;911</text>
+      <text x="20" y="68" fill="#1e293b" font-size="13">x, y, z, three exp scales</text>
+      <text x="20" y="86" fill="#1e293b" font-size="13">sigmoid opacity</text>
+      <text x="20" y="104" fill="#1e293b" font-size="13">quaternion rot_0..3</text>
+      <text x="20" y="122" fill="#1e293b" font-size="13">f_dc_0..2, log volume, anisotropy</text>
+      <text x="20" y="152" fill="#0f172a" font-size="28" font-weight="700">16</text>
+    </g>
+
+    <!-- Merge into the 912 box -->
+    <path d="M153.5 184 L153.5 204 L727 204" fill="none" stroke="#0f172a" stroke-width="2"/>
+    <line x1="440.5" y1="184" x2="440.5" y2="204" stroke="#0f172a" stroke-width="2"/>
+    <line x1="727" y1="184" x2="727" y2="204" stroke="#0f172a" stroke-width="2"/>
+    <line x1="188" y1="204" x2="188" y2="218" stroke="#0f172a" stroke-width="2" marker-end="url(#arrow)"/>
+
+    <!-- 912 -> tanh 32 -> tanh 32 -> 33 -->
+    <g transform="translate(124,224)">
+      <rect width="128" height="84" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+      <text x="64" y="40" text-anchor="middle" fill="#0f172a" font-size="28" font-weight="700">912</text>
+      <text x="64" y="64" text-anchor="middle" fill="#1e293b" font-size="13">packed row</text>
+    </g>
+    <g transform="translate(292,224)">
+      <rect width="128" height="84" rx="8" fill="#0f172a"/>
+      <text x="64" y="34" text-anchor="middle" fill="#ffffff" font-size="14" font-weight="700">tanh</text>
+      <text x="64" y="64" text-anchor="middle" fill="#ffffff" font-size="28" font-weight="700">32</text>
+    </g>
+    <g transform="translate(460,224)">
+      <rect width="128" height="84" rx="8" fill="#0f172a"/>
+      <text x="64" y="34" text-anchor="middle" fill="#ffffff" font-size="14" font-weight="700">tanh</text>
+      <text x="64" y="64" text-anchor="middle" fill="#ffffff" font-size="28" font-weight="700">32</text>
+    </g>
+    <g transform="translate(628,224)">
+      <rect width="128" height="84" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+      <text x="64" y="40" text-anchor="middle" fill="#0f172a" font-size="28" font-weight="700">33</text>
+      <text x="64" y="64" text-anchor="middle" fill="#1e293b" font-size="13">linear head</text>
+    </g>
+
+    <line x1="252" y1="266" x2="286" y2="266" stroke="#0f172a" stroke-width="2" marker-end="url(#arrow)"/>
+    <line x1="420" y1="266" x2="454" y2="266" stroke="#0f172a" stroke-width="2" marker-end="url(#arrow)"/>
+    <line x1="588" y1="266" x2="622" y2="266" stroke="#0f172a" stroke-width="2" marker-end="url(#arrow)"/>
+
+    <text x="440" y="336" text-anchor="middle" fill="#0f172a" font-size="14" font-weight="700">Glorot init, zero biases. Sigmoid is not inside forward.</text>
+
+    <text x="16" y="370" fill="#0f172a" font-size="16" font-weight="700">Output groups</text>
+
+    <!-- two columns of output slots -->
+    <g transform="translate(16,384)">
+      <rect width="418" height="36" rx="6" fill="#ffffff" stroke="#0f172a" stroke-width="1.5"/>
+      <text x="14" y="24" fill="#0f172a" font-size="15">0&#8211;9 material logits</text>
+    </g>
+    <g transform="translate(446,384)">
+      <rect width="418" height="36" rx="6" fill="#ffffff" stroke="#0f172a" stroke-width="1.5"/>
+      <text x="14" y="24" fill="#0f172a" font-size="15">10&#8211;15 body</text>
+    </g>
+    <g transform="translate(16,428)">
+      <rect width="418" height="36" rx="6" fill="#ffffff" stroke="#0f172a" stroke-width="1.5"/>
+      <text x="14" y="24" fill="#0f172a" font-size="15">16&#8211;23 collision</text>
+    </g>
+    <g transform="translate(446,428)">
+      <rect width="418" height="36" rx="6" fill="#ffffff" stroke="#0f172a" stroke-width="1.5"/>
+      <text x="14" y="24" fill="#0f172a" font-size="15">24 log mass</text>
+    </g>
+    <g transform="translate(16,472)">
+      <rect width="418" height="36" rx="6" fill="#ffffff" stroke="#0f172a" stroke-width="1.5"/>
+      <text x="14" y="24" fill="#0f172a" font-size="15">25 log density</text>
+    </g>
+    <g transform="translate(446,472)">
+      <rect width="418" height="36" rx="6" fill="#ffffff" stroke="#0f172a" stroke-width="1.5"/>
+      <text x="14" y="24" fill="#0f172a" font-size="15">26 rigidity</text>
+    </g>
+    <g transform="translate(16,516)">
+      <rect width="418" height="36" rx="6" fill="#ffffff" stroke="#0f172a" stroke-width="1.5"/>
+      <text x="14" y="24" fill="#0f172a" font-size="15">27 deformability</text>
+    </g>
+    <g transform="translate(446,516)">
+      <rect width="418" height="36" rx="6" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" stroke-dasharray="5 3"/>
+      <text x="14" y="24" fill="#0f172a" font-size="15">28&#8211;32 masked unpublished numerics</text>
+    </g>
+
+    <text x="16" y="586" fill="#0f172a" font-size="14">Sigmoid is applied to slots 26 and 27 in the loss and when decoding.</text>
+    <text x="16" y="610" fill="#0f172a" font-size="14">Friction and restitution stay null.</text>
+  </g>
+</svg>

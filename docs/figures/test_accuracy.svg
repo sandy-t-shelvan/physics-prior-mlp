@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="280" viewBox="0 0 880 280" role="img">
+  <title>Test accuracy for material, body, and collision</title>
+  <desc>Test material accuracy 0.889, body accuracy 0.991, and collision accuracy 0.768.</desc>
+  <rect width="880" height="280" fill="#ffffff"/>
+
+  <g font-family="Segoe UI, Helvetica, Arial, sans-serif">
+    <text x="36" y="36" fill="#0f172a" font-size="20" font-weight="700">Test accuracy</text>
+    <text x="196" y="36" fill="#1e293b" font-size="15">323 objects</text>
+
+    <!-- scale grid at 0, 0.5, and 1 across a 560px bar -->
+    <line x1="184" y1="56" x2="184" y2="236" stroke="#cbd5e1" stroke-width="1"/>
+    <line x1="464" y1="56" x2="464" y2="236" stroke="#cbd5e1" stroke-width="1"/>
+    <line x1="744" y1="56" x2="744" y2="236" stroke="#cbd5e1" stroke-width="1"/>
+
+    <!-- tracks -->
+    <rect x="184" y="64" width="560" height="36" rx="4" fill="#e5e7eb"/>
+    <rect x="184" y="124" width="560" height="36" rx="4" fill="#e5e7eb"/>
+    <rect x="184" y="184" width="560" height="36" rx="4" fill="#e5e7eb"/>
+
+    <!-- values: 0.889, 0.991, 0.768 of 560 -->
+    <rect x="184" y="64" width="497.84" height="36" rx="4" fill="#1e3a8a"/>
+    <rect x="184" y="124" width="554.96" height="36" rx="4" fill="#1e3a8a"/>
+    <rect x="184" y="184" width="430.08" height="36" rx="4" fill="#1e3a8a"/>
+
+    <text x="172" y="88" text-anchor="end" fill="#0f172a" font-size="16" font-weight="700">Material</text>
+    <text x="172" y="148" text-anchor="end" fill="#0f172a" font-size="16" font-weight="700">Body</text>
+    <text x="172" y="208" text-anchor="end" fill="#0f172a" font-size="16" font-weight="700">Collision</text>
+
+    <text x="670" y="88" text-anchor="end" fill="#ffffff" font-size="16" font-weight="700">0.889</text>
+    <text x="727" y="148" text-anchor="end" fill="#ffffff" font-size="16" font-weight="700">0.991</text>
+    <text x="602" y="208" text-anchor="end" fill="#ffffff" font-size="16" font-weight="700">0.768</text>
+
+    <text x="184" y="258" text-anchor="middle" fill="#1e293b" font-size="13">0</text>
+    <text x="464" y="258" text-anchor="middle" fill="#1e293b" font-size="13">0.5</text>
+    <text x="744" y="258" text-anchor="middle" fill="#1e293b" font-size="13">1</text>
+  </g>
+</svg>

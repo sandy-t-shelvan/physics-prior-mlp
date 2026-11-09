@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="332" viewBox="0 0 880 332" role="img">
+  <title>Pipeline from a mesh to 33 averaged MLP outputs</title>
+  <desc>Mesh, 16 CPU orbit views, COLMAP, splatfacto for 600 steps, one (N, 912) row, the MLP on each in-mask Gaussian, then the mean of the 33 outputs.</desc>
+  <rect width="880" height="332" fill="#ffffff"/>
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7.2" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 Z" fill="#0f172a"/>
+    </marker>
+  </defs>
+
+  <g font-family="Segoe UI, Helvetica, Arial, sans-serif">
+    <!-- 1 Mesh -->
+    <g transform="translate(28,24)">
+      <rect width="140" height="120" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+      <circle cx="22" cy="24" r="12" fill="#0f172a"/>
+      <text x="22" y="28" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="700">1</text>
+      <text x="42" y="29" fill="#0f172a" font-size="16" font-weight="700">Mesh</text>
+    </g>
+
+    <!-- 2 orbit -->
+    <g transform="translate(196,24)">
+      <rect width="240" height="120" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+      <circle cx="22" cy="24" r="12" fill="#0f172a"/>
+      <text x="22" y="28" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="700">2</text>
+      <text x="42" y="29" fill="#0f172a" font-size="16" font-weight="700">16 orbit views</text>
+      <text x="16" y="58" fill="#1e293b" font-size="14">8 azimuths</text>
+      <text x="16" y="78" fill="#1e293b" font-size="14">elevations 18&#176; and 50&#176;</text>
+      <text x="16" y="98" fill="#1e293b" font-size="14">CPU</text>
+    </g>
+
+    <!-- 3 COLMAP -->
+    <g transform="translate(464,24)">
+      <rect width="160" height="120" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+      <circle cx="22" cy="24" r="12" fill="#0f172a"/>
+      <text x="22" y="28" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="700">3</text>
+      <text x="42" y="29" fill="#0f172a" font-size="16" font-weight="700">COLMAP</text>
+    </g>
+
+    <!-- 4 splatfacto -->
+    <g transform="translate(652,24)">
+      <rect width="200" height="120" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+      <circle cx="22" cy="24" r="12" fill="#0f172a"/>
+      <text x="22" y="28" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="700">4</text>
+      <text x="42" y="29" fill="#0f172a" font-size="16" font-weight="700">splatfacto</text>
+      <text x="16" y="58" fill="#1e293b" font-size="14">600 steps</text>
+    </g>
+
+    <line x1="168" y1="84" x2="190" y2="84" stroke="#0f172a" stroke-width="2" marker-end="url(#arrow)"/>
+    <line x1="436" y1="84" x2="458" y2="84" stroke="#0f172a" stroke-width="2" marker-end="url(#arrow)"/>
+    <line x1="624" y1="84" x2="646" y2="84" stroke="#0f172a" stroke-width="2" marker-end="url(#arrow)"/>
+
+    <!-- return rail from splatfacto down into step 5 -->
+    <path d="M752 144 L752 170 L153 170 L153 190" fill="none" stroke="#0f172a" stroke-width="2" marker-end="url(#arrow)"/>
+
+    <!-- 5 pack -->
+    <g transform="translate(28,196)">
+      <rect width="250" height="112" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+      <circle cx="22" cy="24" r="12" fill="#0f172a"/>
+      <text x="22" y="28" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="700">5</text>
+      <text x="42" y="29" fill="#0f172a" font-size="16" font-weight="700">(N, 912) row</text>
+      <text x="16" y="58" fill="#1e293b" font-size="14">one row per Gaussian</text>
+    </g>
+
+    <!-- 6 MLP -->
+    <g transform="translate(314,196)">
+      <rect width="230" height="112" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+      <circle cx="22" cy="24" r="12" fill="#0f172a"/>
+      <text x="22" y="28" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="700">6</text>
+      <text x="42" y="29" fill="#0f172a" font-size="16" font-weight="700">MLP</text>
+      <text x="16" y="58" fill="#1e293b" font-size="14">each in-mask Gaussian</text>
+    </g>
+
+    <!-- 7 average -->
+    <g transform="translate(580,196)">
+      <rect width="272" height="112" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+      <circle cx="22" cy="24" r="12" fill="#0f172a"/>
+      <text x="22" y="28" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="700">7</text>
+      <text x="42" y="29" fill="#0f172a" font-size="16" font-weight="700">33 averaged outputs</text>
+      <text x="16" y="58" fill="#1e293b" font-size="14">mean of the 33 outputs</text>
+    </g>
+
+    <line x1="278" y1="252" x2="308" y2="252" stroke="#0f172a" stroke-width="2" marker-end="url(#arrow)"/>
+    <line x1="544" y1="252" x2="574" y2="252" stroke="#0f172a" stroke-width="2" marker-end="url(#arrow)"/>
+  </g>
+</svg>

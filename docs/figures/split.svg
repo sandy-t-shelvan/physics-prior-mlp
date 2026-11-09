@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="300" viewBox="0 0 880 300" role="img">
+  <title>Split of 3736 fitted objects into train, validation, and test</title>
+  <desc>3274 train, 139 validation, and 323 test. Epoch 10 was chosen by the lowest validation loss. The test split was scored once and did not choose the epoch.</desc>
+  <rect width="880" height="300" fill="#ffffff"/>
+  <defs>
+    <clipPath id="bar">
+      <rect x="40" y="78" width="800" height="52" rx="8"/>
+    </clipPath>
+  </defs>
+
+  <g font-family="Segoe UI, Helvetica, Arial, sans-serif">
+    <text x="40" y="40" fill="#0f172a" font-size="22" font-weight="700">3736 fitted objects</text>
+    <text x="40" y="66" fill="#1e293b" font-size="15">3274 train + 139 validation + 323 test</text>
+
+    <g clip-path="url(#bar)">
+      <rect x="40" y="78" width="701.0706638" height="52" fill="#1e3a8a"/>
+      <rect x="741.0706638" y="78" width="29.76445396" height="52" fill="#c2410c"/>
+      <rect x="770.8351178" y="78" width="69.16488222" height="52" fill="#0f766e"/>
+    </g>
+    <rect x="40" y="78" width="800" height="52" rx="8" fill="none" stroke="#0f172a" stroke-width="2"/>
+
+    <text x="390.5" y="110" text-anchor="middle" fill="#ffffff" font-size="18" font-weight="700">3274 train</text>
+    <text x="805.4" y="109" text-anchor="middle" fill="#ffffff" font-size="14" font-weight="700">323</text>
+
+    <line x1="755.95" y1="130" x2="755.95" y2="148" stroke="#c2410c" stroke-width="2"/>
+    <text x="748" y="166" text-anchor="end" fill="#9a3412" font-size="14" font-weight="700">139 validation</text>
+
+    <rect x="40" y="196" width="16" height="16" rx="3" fill="#1e3a8a"/>
+    <text x="64" y="209" fill="#0f172a" font-size="15">3274 train</text>
+
+    <rect x="230" y="196" width="16" height="16" rx="3" fill="#c2410c"/>
+    <text x="254" y="209" fill="#0f172a" font-size="15">139 validation</text>
+
+    <rect x="460" y="196" width="16" height="16" rx="3" fill="#0f766e"/>
+    <text x="484" y="209" fill="#0f172a" font-size="15">323 test</text>
+
+    <text x="40" y="252" fill="#0f172a" font-size="15" font-weight="700">Epoch 10 was chosen by the lowest validation loss.</text>
+    <text x="40" y="278" fill="#1e293b" font-size="15">The test split was scored once and did not choose the epoch.</text>
+  </g>
+</svg>
