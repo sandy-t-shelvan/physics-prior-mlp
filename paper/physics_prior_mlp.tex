@@ -1,14 +1,66 @@
-\documentclass[11pt]{article}
-\usepackage{amsmath}
+\documentclass[10pt,letterpaper]{article}
 
-\title{A Per-Gaussian Physics-Prior MLP\\Trained on Fitted Splats}
-\author{sandy-t-shelvan}
-\date{9 November 2026}
+% Preprint layout: full-width title and abstract, then a two-column body.
+% Not a conference submission and not an arXiv deposit.
+\usepackage[T1]{fontenc}
+\usepackage{mathptmx}
+\usepackage{amsmath}
+\usepackage[letterpaper,margin=0.75in,columnsep=0.3in,headheight=14.5pt,headsep=10pt,footskip=28pt]{geometry}
+\usepackage{fancyhdr}
+\usepackage[font=small,labelfont=bf,labelsep=colon]{caption}
+\usepackage{microtype}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\footnotesize\itshape A Per-Gaussian Physics-Prior MLP}
+\fancyhead[R]{\footnotesize Preprint}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\fancypagestyle{plain}{%
+  \fancyhf{}%
+  \fancyfoot[L]{\footnotesize Preprint}%
+  \fancyfoot[C]{\thepage}%
+  \renewcommand{\headrulewidth}{0pt}%
+}
+
+\makeatletter
+\renewcommand{\@seccntformat}[1]{\csname the#1\endcsname.\enspace}
+\renewcommand\section{\@startsection{section}{1}{\z@}%
+  {-2.4ex \@plus -0.6ex \@minus -0.2ex}%
+  {1.1ex \@plus 0.2ex}%
+  {\large\bfseries\raggedright}}
+\let\savedthebibliography\thebibliography
+\renewcommand{\thebibliography}[1]{%
+  \savedthebibliography{#1}%
+  \small
+}
+\makeatother
+
+\DeclareRobustCommand{\_}{\textunderscore\allowbreak}
+\frenchspacing
+\emergencystretch=2em
+\sloppy
+\newsavebox\titlebox
 
 \begin{document}
-\maketitle
 
-\begin{abstract}
+\begin{lrbox}{\titlebox}
+\begin{minipage}{\textwidth}
+\begin{center}
+{\LARGE\bfseries A Per-Gaussian Physics-Prior MLP\\[0.15em]
+Trained on Fitted Splats\par}
+\vspace{0.7em}
+{\large sandy-t-shelvan\par}
+\vspace{0.35em}
+{9 November 2026\par}
+\vspace{0.25em}
+{\footnotesize Preprint\par}
+\end{center}
+\vspace{0.15em}
+\begin{center}
+{\large\bfseries Abstract}
+\end{center}
+\begin{quote}
 A per-Gaussian multilayer perceptron predicts physical attributes of an object from a fitted 3D Gaussian splat~\cite{kerbl2023gaussian}.
 The network has two tanh hidden layers of width 32 and a linear head of width 33.
 Inference runs the MLP on each in-mask Gaussian and averages the 33 outputs.
@@ -18,7 +70,13 @@ They are not a released third-party checkpoint.
 The saved weights are epoch 10 of a 14-epoch run on 3274 objects.
 On the 323-object test split, which was scored once after the checkpoint was chosen, material accuracy is 0.8885448916408669, body accuracy is 0.9907120743034056, and collision accuracy is 0.7678018575851393.
 Meshes and per-Gaussian \texttt{prior\_input.npy} files are not included.
-\end{abstract}
+\end{quote}
+\vspace{0.35em}
+\end{minipage}
+\end{lrbox}
+
+\twocolumn[\usebox\titlebox]
+\thispagestyle{plain}
 
 \section{Task}
 The model reads one fitted splat and predicts a material class, a body type, a collision primitive, a log mass, a log density, a rigidity, and a deformability.
@@ -95,11 +153,11 @@ The six trained arrays, with Glorot uniform initialization~\cite{glorot2010under
 Glorot uniform draws each entry from \([-\ell, \ell]\) with \(\ell = \sqrt{6/(n_{\mathrm{in}}+n_{\mathrm{out}})}\).
 Only these six arrays are trained.
 The forward map is
-\[
-h_1 = \tanh(x W_1 + b_1), \qquad
-h_2 = \tanh(h_1 W_2 + b_2), \qquad
-y = h_2 W_{\mathrm{out}} + b_{\mathrm{out}}.
-\]
+\begin{align*}
+h_1 &= \tanh(x W_1 + b_1), \\
+h_2 &= \tanh(h_1 W_2 + b_2), \\
+y &= h_2 W_{\mathrm{out}} + b_{\mathrm{out}}.
+\end{align*}
 Rows are accumulated in chunks of 4096 Gaussians.
 The chunked mean matches the mean of the full forward.
 
@@ -113,10 +171,10 @@ For one object the loss is
 \begin{align*}
 \mathcal{L}
 &= \mathrm{CE}(y_{0:9}, \mathrm{material})
-+ \mathrm{CE}(y_{10:15}, \mathrm{body})
-+ \mathrm{CE}(y_{16:23}, \mathrm{collision}) \\
-&\quad + (y_{24} - \log m)^2
-+ (y_{25} - \log \rho)^2
++ \mathrm{CE}(y_{10:15}, \mathrm{body}) \\
+&\quad + \mathrm{CE}(y_{16:23}, \mathrm{collision})
++ (y_{24} - \log m)^2 \\
+&\quad + (y_{25} - \log \rho)^2
 + (\sigma(y_{26}) - r)^2
 + (\sigma(y_{27}) - d)^2.
 \end{align*}
@@ -174,11 +232,12 @@ Table~\ref{tab:scores} is \texttt{score\_split} on the restored epoch-10 weights
 The in-loop losses in Table~\ref{tab:curve} are the mean training loss while the weights were still moving, and the validation loss of the weights at the end of that epoch.
 They are not the restored-checkpoint scores.
 
-\begin{table}[t]
+\begin{table*}[t]
 \centering
 \caption{Restored epoch-10 checkpoint. Classification entries are accuracy. Numeric entries are mean absolute error.}
 \label{tab:scores}
-\footnotesize
+\small
+\setlength{\tabcolsep}{5pt}
 \begin{tabular}{lrrr}
 \hline
  & Train & Validation & Test \\
@@ -194,13 +253,14 @@ Rigidity & 0.03465716247218895 & 0.05072960603976827 & 0.037416784396735514 \\
 Deformability & 0.03273072179495256 & 0.046840128143126915 & 0.03501937974941083 \\
 \hline
 \end{tabular}
-\end{table}
+\end{table*}
 
-\begin{table}[t]
+\begin{table*}[t]
 \centering
 \caption{In-loop mean loss by epoch on the 3274 training objects, and validation loss on the 139 validation objects. Epoch 10 has the lowest validation loss.}
 \label{tab:curve}
-\footnotesize
+\small
+\setlength{\tabcolsep}{8pt}
 \begin{tabular}{rrr}
 \hline
 Epoch & Train loss & Validation loss \\
@@ -221,7 +281,7 @@ Epoch & Train loss & Validation loss \\
 14 & 1.2731846908738063 & 2.386788401613216 \\
 \hline
 \end{tabular}
-\end{table}
+\end{table*}
 
 In-loop train loss fell from 3.459843983024622 at epoch 1 to 1.2731846908738063 at epoch 14.
 Epoch 10 of that curve is 1.4523404458332272.
