@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="448" viewBox="0 0 960 448" role="img">
+  <title>Design: fitted Gaussians, the physics-prior MLP, PhysX, and PhysGaussian</title>
+  <desc>Design diagram. A fitted splat goes through the MLP, the mean of the 33 outputs, and a branch. Rigid, static, and kinematic bodies become a PhysX actor. Soft, cloth, fluid or granular bodies, and deformability of at least 0.65, go to PhysGaussian. PhysX contact is the load on the soft particles. The joint system has not been run.</desc>
+  <rect width="960" height="448" fill="#ffffff"/>
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7.2" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 Z" fill="#0f172a"/>
+    </marker>
+  </defs>
+
+  <g font-family="Segoe UI, Helvetica, Arial, sans-serif">
+    <!-- 1 Fitted Gaussians -->
+    <g transform="translate(12,8)">
+      <rect width="300" height="118" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+      <circle cx="18" cy="20" r="11" fill="#0f172a"/>
+      <text x="18" y="24" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="700">1</text>
+      <text x="36" y="25" fill="#0f172a" font-size="15" font-weight="700">Fitted Gaussians</text>
+      <text x="14" y="50" fill="#1e293b" font-size="13">Mesh, 16 orbit views</text>
+      <text x="14" y="68" fill="#1e293b" font-size="13">COLMAP, splatfacto, 600 steps</text>
+      <text x="14" y="86" fill="#1e293b" font-size="13">Pack (N, 912), one row each</text>
+    </g>
+
+    <!-- 2 MLP -->
+    <g transform="translate(328,8)">
+      <rect width="300" height="118" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+      <circle cx="18" cy="20" r="11" fill="#0f172a"/>
+      <text x="18" y="24" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="700">2</text>
+      <text x="36" y="25" fill="#0f172a" font-size="15" font-weight="700">MLP, each in-mask Gaussian</text>
+      <text x="14" y="50" fill="#1e293b" font-size="13">tanh 32, tanh 32, linear 33</text>
+      <text x="14" y="68" fill="#1e293b" font-size="13">0&#8211;383 DINOv2 ViT-S/14</text>
+      <text x="14" y="86" fill="#1e293b" font-size="13">384&#8211;895 OpenCLIP ViT-B-16</text>
+      <text x="14" y="104" fill="#1e293b" font-size="13">896&#8211;911 geometry</text>
+    </g>
+
+    <!-- 3 Mean -->
+    <g transform="translate(644,8)">
+      <rect width="304" height="118" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+      <circle cx="18" cy="20" r="11" fill="#0f172a"/>
+      <text x="18" y="24" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="700">3</text>
+      <text x="36" y="25" fill="#0f172a" font-size="15" font-weight="700">Mean of the 33 outputs</text>
+      <text x="14" y="50" fill="#1e293b" font-size="13">Average the outputs</text>
+      <text x="14" y="68" fill="#1e293b" font-size="13">Sigmoid after, slots 26 and 27</text>
+      <text x="14" y="86" fill="#1e293b" font-size="13">Unknown weight &#215; 0.4</text>
+      <text x="14" y="104" fill="#1e293b" font-size="13">A tie returns no class</text>
+    </g>
+
+    <line x1="312" y1="67" x2="324" y2="67" stroke="#0f172a" stroke-width="2" marker-end="url(#arrow)"/>
+    <line x1="628" y1="67" x2="640" y2="67" stroke="#0f172a" stroke-width="2" marker-end="url(#arrow)"/>
+
+    <!-- Branch rail from the mean down to PhysX and PhysGaussian -->
+    <path d="M796 126 L796 162 L242 162 L242 182" fill="none" stroke="#0f172a" stroke-width="2" marker-end="url(#arrow)"/>
+    <path d="M796 162 L718 162 L718 182" fill="none" stroke="#0f172a" stroke-width="2" marker-end="url(#arrow)"/>
+    <text x="470" y="154" text-anchor="middle" fill="#0f172a" font-size="13" font-weight="700">Branch: body slots 10&#8211;15, or deformability &#8805; 0.65</text>
+
+    <!-- 4 PhysX -->
+    <g transform="translate(12,182)">
+      <rect width="460" height="156" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+      <rect x="2" y="10" width="6" height="136" rx="3" fill="#1e3a8a"/>
+      <circle cx="22" cy="20" r="11" fill="#0f172a"/>
+      <text x="22" y="24" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="700">4</text>
+      <text x="40" y="25" fill="#0f172a" font-size="15" font-weight="700">NVIDIA PhysX actor</text>
+      <text x="16" y="48" fill="#1e293b" font-size="13">dynamic rigid, static rigid, kinematic</text>
+      <text x="16" y="66" fill="#1e293b" font-size="13">Shape: argmax of slots 16&#8211;23</text>
+      <text x="16" y="84" fill="#1e293b" font-size="13">box, sphere, cylinder, capsule, convex hull,</text>
+      <text x="16" y="102" fill="#1e293b" font-size="13">triangle mesh, tetrahedral mesh, cloth mesh</text>
+      <text x="16" y="120" fill="#1e293b" font-size="13">Mass from log mass (24), density from log density (25)</text>
+      <text x="16" y="138" fill="#1e293b" font-size="13">Friction and restitution: PhysX defaults</text>
+    </g>
+
+    <!-- 5 PhysGaussian -->
+    <g transform="translate(488,182)">
+      <rect width="460" height="156" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+      <rect x="2" y="10" width="6" height="136" rx="3" fill="#047857"/>
+      <circle cx="22" cy="20" r="11" fill="#0f172a"/>
+      <text x="22" y="24" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="700">5</text>
+      <text x="40" y="25" fill="#0f172a" font-size="15" font-weight="700">PhysGaussian</text>
+      <text x="16" y="48" fill="#1e293b" font-size="13">soft deformable, cloth shell, fluid or granular</text>
+      <text x="16" y="66" fill="#1e293b" font-size="13">or deformability at least 0.65</text>
+      <text x="16" y="84" fill="#1e293b" font-size="13">Particles: the same fitted Gaussians</text>
+      <text x="16" y="102" fill="#1e293b" font-size="13">Rigidity (26) and deformability (27) set stiffness</text>
+      <text x="16" y="120" fill="#1e293b" font-size="13">PhysGaussian steps the particles</text>
+      <text x="16" y="138" fill="#1e293b" font-size="13">The renderer draws the moved Gaussians</text>
+    </g>
+
+    <!-- Down into contact -->
+    <path d="M242 338 L242 362" fill="none" stroke="#0f172a" stroke-width="2" marker-end="url(#arrow)"/>
+    <path d="M718 338 L718 350 L312 350 L312 362" fill="none" stroke="#0f172a" stroke-width="2" marker-end="url(#arrow)"/>
+
+    <!-- 6 Contact -->
+    <g transform="translate(12,362)">
+      <rect width="600" height="74" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+      <rect x="2" y="8" width="6" height="58" rx="3" fill="#b45309"/>
+      <circle cx="22" cy="20" r="11" fill="#0f172a"/>
+      <text x="22" y="24" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="700">6</text>
+      <text x="40" y="25" fill="#0f172a" font-size="15" font-weight="700">Contact</text>
+      <text x="16" y="46" fill="#1e293b" font-size="13">PhysX resolves the collision with the prior&#8217;s shape and mass.</text>
+      <text x="16" y="64" fill="#1e293b" font-size="13">That contact is the load on a soft object&#8217;s PhysGaussian particles.</text>
+    </g>
+
+    <!-- 7 Simulated object -->
+    <g transform="translate(628,362)">
+      <rect width="320" height="74" rx="8" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
+      <circle cx="22" cy="20" r="11" fill="#0f172a"/>
+      <text x="22" y="24" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="700">7</text>
+      <text x="40" y="25" fill="#0f172a" font-size="15" font-weight="700">Simulated object</text>
+      <text x="16" y="48" fill="#1e293b" font-size="13">Rigid pose from PhysX</text>
+      <text x="16" y="66" fill="#1e293b" font-size="13">Soft Gaussians from PhysGaussian</text>
+    </g>
+
+    <line x1="612" y1="399" x2="624" y2="399" stroke="#0f172a" stroke-width="2" marker-end="url(#arrow)"/>
+  </g>
+</svg>

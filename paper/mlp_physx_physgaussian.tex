@@ -1,0 +1,198 @@
+\documentclass[10pt,letterpaper]{article}
+
+% Preprint layout: full-width title and abstract, then a two-column body.
+% Not a conference submission and not an arXiv deposit.
+\usepackage[T1]{fontenc}
+\usepackage{mathptmx}
+\usepackage{amsmath}
+\usepackage[letterpaper,margin=0.75in,columnsep=0.28in,headheight=14.5pt,headsep=8pt,footskip=30pt]{geometry}
+\usepackage{fancyhdr}
+\usepackage[font=small,labelfont=bf,labelsep=colon,skip=4pt]{caption}
+\usepackage{microtype}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,calc,positioning}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\footnotesize\itshape Using the MLP prior with PhysX and PhysGaussian}
+\fancyhead[R]{\footnotesize 10 November 2026}
+\fancyfoot[L]{\footnotesize Preprint note. This is not an arXiv submission.}
+\fancyfoot[R]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\fancypagestyle{plain}{%
+  \fancyhf{}%
+  \fancyfoot[L]{\footnotesize Preprint note. This is not an arXiv submission.}%
+  \fancyfoot[R]{\thepage}%
+  \renewcommand{\headrulewidth}{0pt}%
+}
+
+\makeatletter
+\renewcommand{\@seccntformat}[1]{\csname the#1\endcsname.\enspace}
+\renewcommand\section{\@startsection{section}{1}{\z@}%
+  {-2.0ex \@plus -0.5ex \@minus -0.2ex}%
+  {0.85ex \@plus 0.15ex}%
+  {\large\bfseries\raggedright}}
+\makeatother
+
+\DeclareRobustCommand{\_}{\textunderscore\allowbreak}
+\frenchspacing
+\emergencystretch=2em
+\sloppy
+\newsavebox\titlebox
+
+\begin{document}
+
+\begin{lrbox}{\titlebox}
+\begin{minipage}{\textwidth}
+\begin{center}
+{\LARGE\bfseries Using the MLP prior with PhysX and PhysGaussian\par}
+\vspace{0.55em}
+{\large sandy-t-shelvan\par}
+\vspace{0.28em}
+{10 November 2026\par}
+\vspace{0.2em}
+{\footnotesize Preprint note\par}
+\end{center}
+\vspace{0.05em}
+\begin{center}
+{\large\bfseries Abstract}
+\end{center}
+\begin{quote}
+The fitted splat is the object.
+A multilayer perceptron reads each in-mask Gaussian, and the 33 outputs are averaged.
+That mean vote builds one PhysX actor or a set of PhysGaussian particles.
+PhysX still owns contact.
+The weights are epoch 10 of the 14-epoch run in this project.
+They are not a released third-party checkpoint.
+The test scores below measure the prior only.
+The combined system has not been run.
+\end{quote}
+\vspace{0.15em}
+\begin{center}
+\begin{tikzpicture}[
+  font=\footnotesize,
+  box/.style={draw, rounded corners=2pt, align=center, inner sep=3pt, fill=gray!8},
+  tip/.style={semithick,-{Stealth[length=1.7mm]}},
+  node distance=4.2mm
+]
+  \node[box] (mesh) {mesh};
+  \node[box, right=of mesh] (splat) {splatfacto Gaussians};
+  \node[box, right=of splat] (wide) {912 per Gaussian};
+  \node[box, right=of wide] (mlp) {MLP\\[-0.15em] 32 tanh, 32 tanh, 33};
+  \node[box, right=of mlp] (vote) {mean vote};
+
+  \coordinate (fork) at ($(mesh.south)!0.5!(vote.south)+(0,-3.6mm)$);
+  \node[box, text width=7.05cm, anchor=north east] (px) at ($(fork)+(-1.6mm,-2.2mm)$)
+    {rigid / static / kinematic\\PhysX actor (collision, mass, density)};
+  \node[box, text width=7.05cm, anchor=north west] (pg) at ($(fork)+(1.6mm,-2.2mm)$)
+    {soft / cloth / fluid, or deformability $\geq 0.65$\\
+     PhysGaussian particles\\
+     (same Gaussians, rigidity sets stiffness)};
+
+  \coordinate (join) at ($(px.south)!0.5!(pg.south)+(0,-3.4mm)$);
+  \node[box, anchor=north] (contact) at (join) {contact};
+  \node[box, below=3.2mm of contact] (next) {next frame};
+
+  \draw[tip] (mesh) -- (splat);
+  \draw[tip] (splat) -- (wide);
+  \draw[tip] (wide) -- (mlp);
+  \draw[tip] (mlp) -- (vote);
+  \draw[semithick] (vote.south) -- ($(vote.south)+(0,-2.4mm)$) coordinate (stem);
+  \draw[tip] (stem) -| (px.north);
+  \draw[tip] (stem) -| (pg.north);
+  \coordinate (bus) at ($(contact.north)+(0,2.2mm)$);
+  \draw[semithick] (px.south) -- (px.south |- bus) -- (bus);
+  \draw[semithick] (pg.south) -- (pg.south |- bus) -- (bus);
+  \draw[tip] (bus) -- (contact.north);
+  \draw[tip] (contact) -- (next);
+\end{tikzpicture}
+
+\captionof{figure}{Fit once, from the mesh to the mean vote.
+The vote branches.
+Both sides meet at contact, and the next frame follows.
+This is the plan.
+The combined system has not been run.}
+\end{center}
+\vspace{0.1em}
+\end{minipage}
+\end{lrbox}
+
+\twocolumn[\usebox\titlebox]
+\thispagestyle{plain}
+
+\section{Fitted splat}
+The fitted splat is the object.
+Each Gaussian is one row of width 912.
+Columns 0--383 are DINOv2 ViT-S/14, width 384.
+Columns 384--895 are OpenCLIP ViT-B-16 with the OpenAI weights, width 512.
+Columns 896--911 are geometry, in this order: position \(x\), \(y\), \(z\), three exp scales, sigmoid opacity, quaternion components \texttt{rot\_0} through \texttt{rot\_3}, spherical-harmonic DC coefficients \texttt{f\_dc\_0} through \texttt{f\_dc\_2}, log volume, and anisotropy.
+
+Opacity must vary.
+A fitted row is kept only when the opacity standard deviation is at least \(10^{-3}\) and the opacity is not the constant 0.99.
+Constant 0.99 is the wrong input.
+A triangle prior with opacity fixed at 0.99 is not this model, and the file \texttt{physics\_prior.npz} is not part of this repository.
+
+\section{MLP}
+The MLP is two tanh layers of width 32 and a linear map to 33.
+It runs per in-mask Gaussian.
+The 33 outputs are averaged.
+Averaging the 912 inputs and running the MLP once is a different function and is not the inference used here.
+The sigmoid is not inside the forward pass.
+It is applied to rigidity and deformability after the forward pass, in the loss and when the mean is decoded.
+
+Slots 0--9 are material: plastic, metal, wood, fabric, paper and cardboard, rubber and foam, glass and ceramic, food and organic matter, liquid and granular matter, unknown.
+Slots 10--15 are body: dynamic rigid, static rigid, kinematic, soft deformable, cloth shell, fluid or granular.
+Slots 16--23 are collision: box, sphere, cylinder, capsule, convex hull, triangle mesh, tetrahedral mesh, cloth mesh.
+Slot 24 is log mass and slot 25 is log density, both natural logs.
+Slot 26 is rigidity and slot 27 is deformability.
+Slots 28--32 are masked.
+They receive no target and no gradient.
+Friction and restitution are unset.
+Young's modulus, Poisson's ratio, and the rendering material are unpublished and were not invented.
+
+A class tie returns no class.
+A proposal whose class is unknown has its weight multiplied by 0.4.
+The keyword proposal is passed in by the caller.
+The vote does not look up the keyword dictionary on its own.
+
+The saved weights are epoch 10 of the 14-epoch run, file \texttt{data/mlp/physics\_prior\_splat.npz}.
+The weights were trained in this project.
+On the test split, \(n = 323\), material accuracy is 0.889, body accuracy is 0.991, and collision accuracy is 0.768.
+These scores measure the prior only, not a PhysX or PhysGaussian rollout.
+The body accuracy is the body head compared with the stored label.
+The soft-body rule is applied when a physics record is built, not inside the masked training loss.
+
+\section{PhysX}
+PhysX builds one solid actor from the prior when the body is dynamic rigid, static rigid, or kinematic.
+The actor takes the collision primitive, the mass, and the density.
+Friction and restitution stay at the PhysX default, because the prior leaves them unset.
+
+\section{PhysGaussian}
+PhysGaussian is used when the body is soft deformable, cloth shell, or fluid or granular, or when deformability is at least 0.65.
+An object becomes a soft body when deformability is at least 0.65, and that rule wins when it fires.
+The same Gaussians are the particles.
+MLP rigidity sets stiffness.
+MLP mass is the particle mass.
+PhysX still owns contact.
+That contact loads the particles.
+The moved Gaussians are then rendered.
+Both branches meet at contact, and the next frame follows.
+
+\section{Frame order}
+The fit runs once.
+The orbit is 16 views: 8 azimuths at elevations \(18^\circ\) and \(50^\circ\).
+COLMAP registers those views, splatfacto runs for 600 steps, and the pack writes \((N, 912)\).
+Opacity must vary on that pack.
+The MLP runs, and the mean vote branches.
+Each later frame steps PhysX, then steps PhysGaussian under that contact when the object is on the PhysGaussian branch, then renders.
+
+\section{Scope}
+The 3274 / 139 / 323 split is the prior's split.
+Train has 3274, validation has 139, and test has 323.
+The test split was scored once and did not choose the epoch.
+Reproducing the SceneAgent simulation number (Hollis, Fan, and Yang, arXiv:2610.34745, section 3.4) still needs their evaluation scenes and their weights.
+Those weights are not public.
+This note is how our prior would drive the two simulators.
+The combined system has not been run.
+
+\end{document}
