@@ -9,6 +9,7 @@
 \usepackage{fancyhdr}
 \usepackage[font=small,labelfont=bf,labelsep=colon,skip=4pt]{caption}
 \usepackage{microtype}
+\usepackage{flushend}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta,calc,positioning}
 
@@ -46,14 +47,14 @@
 \begin{minipage}{\textwidth}
 \begin{center}
 {\LARGE\bfseries Using the MLP prior with PhysX and PhysGaussian\par}
-\vspace{0.55em}
+\vspace{0.45em}
 {\large sandy-t-shelvan\par}
-\vspace{0.28em}
+\vspace{0.22em}
 {10 November 2026\par}
-\vspace{0.2em}
+\vspace{0.12em}
 {\footnotesize Preprint note\par}
 \end{center}
-\vspace{0.05em}
+\vspace{0.02em}
 \begin{center}
 {\large\bfseries Abstract}
 \end{center}
@@ -67,42 +68,48 @@ They are not a released third-party checkpoint.
 The test scores below measure the prior only.
 The combined system has not been run.
 \end{quote}
-\vspace{0.15em}
+\vspace{0.08em}
 \begin{center}
 \begin{tikzpicture}[
   font=\footnotesize,
+  top/.style={draw, rounded corners=2pt, align=center, inner sep=3pt, fill=gray!8, minimum height=9.6mm},
   box/.style={draw, rounded corners=2pt, align=center, inner sep=3pt, fill=gray!8},
-  tip/.style={semithick,-{Stealth[length=1.7mm]}},
-  node distance=4.2mm
+  tip/.style={semithick,-{Stealth[length=1.6mm]}},
+  node distance=3.2mm
 ]
-  \node[box] (mesh) {mesh};
-  \node[box, right=of mesh] (splat) {splatfacto Gaussians};
-  \node[box, right=of splat] (wide) {912 per Gaussian};
-  \node[box, right=of wide] (mlp) {MLP\\[-0.15em] 32 tanh, 32 tanh, 33};
-  \node[box, right=of mlp] (vote) {mean vote};
+  \node[top] (mesh) {mesh};
+  \node[top, right=of mesh] (splat) {splatfacto\\Gaussians};
+  \node[top, right=of splat] (wide) {912 per\\Gaussian};
+  \node[top, right=of wide] (mlp) {MLP (32 tanh, 32 tanh, 33)};
 
-  \coordinate (fork) at ($(mesh.south)!0.5!(vote.south)+(0,-3.6mm)$);
-  \node[box, text width=7.05cm, anchor=north east] (px) at ($(fork)+(-1.6mm,-2.2mm)$)
+  \coordinate (spanmid) at ($(mesh.south west)!0.5!(mlp.south east)$);
+  \node[box, anchor=north] (vote) at ($(spanmid)+(0,-6.5mm)$) {mean vote};
+
+  \coordinate (hub) at ($(vote.south)+(0,-4.2mm)$);
+  \node[box, text width=6.7cm, minimum height=13.2mm, anchor=north east] (px) at ($(hub)+(-2.2mm,-3.2mm)$)
     {rigid / static / kinematic\\PhysX actor (collision, mass, density)};
-  \node[box, text width=7.05cm, anchor=north west] (pg) at ($(fork)+(1.6mm,-2.2mm)$)
+  \node[box, text width=6.7cm, minimum height=13.2mm, anchor=north west] (pg) at ($(hub)+(2.2mm,-3.2mm)$)
     {soft / cloth / fluid, or deformability $\geq 0.65$\\
      PhysGaussian particles\\
      (same Gaussians, rigidity sets stiffness)};
 
-  \coordinate (join) at ($(px.south)!0.5!(pg.south)+(0,-3.4mm)$);
-  \node[box, anchor=north] (contact) at (join) {contact};
-  \node[box, below=3.2mm of contact] (next) {next frame};
+  \coordinate (meet) at ($(px.south)!0.5!(pg.south)+(0,-4.2mm)$);
+  \node[box, anchor=north] (contact) at (meet) {contact};
+  \node[box, below=2.8mm of contact] (next) {next frame};
 
   \draw[tip] (mesh) -- (splat);
   \draw[tip] (splat) -- (wide);
   \draw[tip] (wide) -- (mlp);
-  \draw[tip] (mlp) -- (vote);
-  \draw[semithick] (vote.south) -- ($(vote.south)+(0,-2.4mm)$) coordinate (stem);
-  \draw[tip] (stem) -| (px.north);
-  \draw[tip] (stem) -| (pg.north);
+  \draw[semithick] (mlp.south) -- (mlp.south |- vote.north);
+  \draw[tip] (mlp.south |- vote.north) -- (vote.north);
+  \draw[semithick] (vote.south) -- (hub);
+  \draw[semithick] (px.north |- hub) -- (pg.north |- hub);
+  \draw[tip] (px.north |- hub) -- (px.north);
+  \draw[tip] (pg.north |- hub) -- (pg.north);
   \coordinate (bus) at ($(contact.north)+(0,2.2mm)$);
-  \draw[semithick] (px.south) -- (px.south |- bus) -- (bus);
-  \draw[semithick] (pg.south) -- (pg.south |- bus) -- (bus);
+  \draw[semithick] (px.south) -- (px.south |- bus);
+  \draw[semithick] (pg.south) -- (pg.south |- bus);
+  \draw[semithick] (px.south |- bus) -- (pg.south |- bus);
   \draw[tip] (bus) -- (contact.north);
   \draw[tip] (contact) -- (next);
 \end{tikzpicture}
@@ -113,7 +120,6 @@ Both sides meet at contact, and the next frame follows.
 This is the plan.
 The combined system has not been run.}
 \end{center}
-\vspace{0.1em}
 \end{minipage}
 \end{lrbox}
 
@@ -124,7 +130,7 @@ The combined system has not been run.}
 The fitted splat is the object.
 Each Gaussian is one row of width 912.
 Columns 0--383 are DINOv2 ViT-S/14, width 384.
-Columns 384--895 are OpenCLIP ViT-B-16 with the OpenAI weights, width 512.
+Columns 384--895 are OpenCLIP ViT-B-16 with the \mbox{OpenAI} weights, width 512.
 Columns 896--911 are geometry, in this order: position \(x\), \(y\), \(z\), three exp scales, sigmoid opacity, quaternion components \texttt{rot\_0} through \texttt{rot\_3}, spherical-harmonic DC coefficients \texttt{f\_dc\_0} through \texttt{f\_dc\_2}, log volume, and anisotropy.
 
 Opacity must vary.

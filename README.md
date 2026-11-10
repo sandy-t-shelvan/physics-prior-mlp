@@ -6,6 +6,8 @@ A per-Gaussian MLP predicts physical attributes from a fitted 3D Gaussian splat.
 
 The PDF is [`paper/physics_prior_mlp.pdf`](paper/physics_prior_mlp.pdf). The checkpoint is [`data/mlp/physics_prior_splat.npz`](data/mlp/physics_prior_splat.npz).
 
+A two-page design for using this prior with NVIDIA PhysX and PhysGaussian is [`paper/mlp_physx_physgaussian.pdf`](paper/mlp_physx_physgaussian.pdf). That joint system has not been run.
+
 ## Pipeline
 
 <img src="docs/figures/pipeline.png" alt="Pipeline from a mesh through 16 orbit views, COLMAP, splatfacto, a packed row, and the MLP to 33 averaged outputs" width="880">
